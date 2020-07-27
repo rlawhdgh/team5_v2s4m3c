@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace = "dev.mvc.openspace_reply.Openspace_replyDAOInter">
+  <insert id="create" parameterType="Openspace_replyVO">
+    INSERT INTO openspace_reply(openspace_reply_no, openspace_no, consumer_no, openspace_reply_content, openspace_reply_date)
+    VALUES((SELECT NVL(MAX(openspace_reply_no), 0) + 1 as openspace_reply_no FROM openspace_reply),
+                 #{openspace_no}, #{consumer_no}, #{openspace_reply_content}, sysdate)
+  </insert>
+  
+   <select id="reply_list_paging" resultType="Openspace_replyVO" parameterType="HashMap">
+  SELECT  openspace_reply_no, openspace_no, consumer_no, openspace_reply_content, openspace_reply_date, consumer_nickname, r
+  FROM (
+             SELECT openspace_reply_no, openspace_no, consumer_no, openspace_reply_content, openspace_reply_date, consumer_nickname, rownum as r
+             FROM (
+                    SELECT o.openspace_reply_no, o.openspace_no, o.consumer_no, o.openspace_reply_content, o.openspace_reply_date, c.consumer_nickname
+                    FROM openspace_reply o, consumer c 
+                    WHERE openspace_no=#{openspace_no} and o.consumer_no = c.consumer_no
+                    ORDER BY openspace_reply_date DESC
+              )          
+  )
+  WHERE <![CDATA[ r >= #{startNum} AND r <= #{endNum} ]]>
+  </select>
+  
+   <select id="list" resultType="Openspace_replyVO"  parameterType="int">
+SELECT o.openspace_reply_no, o.openspace_no, o.consumer_no, o.openspace_reply_content, o.openspace_reply_date, c.consumer_nickname
+FROM consumer c, openspace_reply o
+WHERE o.consumer_no = c.consumer_no and o.openspace_no= #{openspace_no}
+ORDER BY o.openspace_reply_date DESC
+   </select>
+   
+    <update id="update" parameterType="Openspace_replyVO">
+     UPDATE openspace_reply
+     SET openspace_reply_content = #{openspace_reply_content}
+     WHERE openspace_reply_no= #{openspace_reply_no}
+   </update>   
+   
+   
+   <delete id="delete" parameterType="int">
+    DELETE FROM openspace_reply
+    WHERE openspace_reply_no = #{openspace_reply_no}
+   </delete>
+   
+   <delete id="delete_all" parameterType="int">
+    DELETE FROM openspace_reply
+    WHERE openspace_no = #{openspace_no}
+   </delete>
+   
+   
+      <select id="consumer_list" resultType="Openspace_replyVO"  parameterType="int">
+SELECT r.openspace_reply_no, r.openspace_no, r.consumer_no, r.openspace_reply_content, r.openspace_reply_date, o.openspace_title
+FROM openspace_reply r, consumer c, openspace o
+WHERE r.consumer_no=c.consumer_no and r.openspace_no=o.openspace_no and c.consumer_no= #{consumer_no}
+ORDER BY r.openspace_reply_date DESC
+   </select>
+  
+  
+  
+  
+</mapper>

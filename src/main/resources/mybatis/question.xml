@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace = "dev.mvc.question.QuestionDAOInter">
+  <insert id="create" parameterType="QuestionVO">
+    INSERT INTO question(question_no, questiongrp_no,
+                       question_title, question_content, question_seqno, question_url, question_date)
+    VALUES (question_seq.nextval, #{questiongrp_no}, #{question_title}, #{question_content},
+                   (SELECT NVL(MAX(question_seqno), 0) + 1 as question_seqno FROM question), #{question_url}, sysdate) 
+  </insert>
+    <!-- 전체 리스트 -->
+   <select id="list" resultType="QuestionVO">
+SELECT g.questiongrp_name,
+                q.question_no, q.questiongrp_no,
+                   q.question_title, q.question_content, q.question_seqno, q.question_url, q.question_date
+FROM question q, questiongrp g
+where q.questiongrp_no= g.questiongrp_no
+ORDER BY q.question_seqno DESC
+
+  </select>
+  
+  
+    <!-- 수정 -->
+   <update id="update" parameterType="QuestionVO">
+    UPDATE question
+    SET question_title = #{question_title}, question_content=#{question_content},
+    question_url=#{question_url}
+    WHERE question_no =#{question_no}
+   </update>  
+   
+     <!-- 1건의 레코드 조회 -->
+   <select id="read" resultType="QuestionVO" parameterType="int">
+      SELECT question_no, questiongrp_no,
+                         question_title, question_content, question_seqno, question_url, question_date
+      FROM question
+      where question_no =#{question_no}
+   </select> 
+   
+      <!-- 삭제 -->
+   <delete id="delete" parameterType="int">
+    DELETE FROM question
+    WHERE question_no = #{question_no}
+   </delete>
+   
+ <!-- 그룹 목록에 대한 리스트 -->  
+<select id="list_by_question" resultType="QuestionVO" parameterType="int">
+SELECT g.questiongrp_name,
+                q.question_no, q.questiongrp_no,
+                   q.question_title, q.question_content, q.question_seqno, q.question_url, q.question_date
+FROM question q, questiongrp g
+where q.questiongrp_no= g.questiongrp_no and q.questiongrp_no=#{questiongrp_no}
+ORDER BY q.question_seqno DESC
+
+</select>
+
+
+    <!-- 그룹에 따른 따른 모든 파일 삭제 -->  
+   <delete id="delete_all" parameterType="int">
+      DELETE FROM question
+      WHERE questiongrp_no = #{questiongrp_no}
+   </delete>
+
+
+
+
+
+
+
+
+</mapper>

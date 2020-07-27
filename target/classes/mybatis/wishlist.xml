@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<!-- dev.mvc.wishlist.WishlistDAOInter 패키지에 등록된 interface 명시,
+      패키지명과 인터페이스명은 실제로 존재해야함,
+      Spring이 내부적으로 자동으로 interface를 구현해줌. -->
+<mapper namespace="dev.mvc.wishlist.WishlistDAOInter"> 
+  <!-- 
+  insert: INSERT SQL 실행
+  id: Spring에서 호출시 사용
+  parameterType: 전달받는 데이터 객체
+  return: 등록한 레코드 갯수 리턴
+  SQL선언시 ';'은 삭제
+  #{}: ? 동일
+  #{name}: public String getName(){...
+  -->
+  
+  <select id="read_check" resultType="int" parameterType="int">
+    SELECT COUNT(game_gameno) as cnt
+    FROM wishlist
+    WHERE game_gameno=#{game_gameno}
+  </select>
+  
+  <delete id="delete_check" parameterType="int">
+   DELETE FROM wishlist
+   WHERE game_gameno=#{game_gameno}
+  </delete>
+  
+  
+  <insert id="create" parameterType="WishlistVO">
+    INSERT INTO  wishlist(wishlist_wishlistno, wishlist_seqno, game_gameno, consumer_no, wishlist_date)
+    VALUES(wishlist_seq.nextval, #{wishlist_seqno}, #{game_gameno}, #{consumer_no}, sysdate)
+  </insert>
+   
+  <select id="list_all" resultType="WishlistVO">
+    SELECT wishlist_wishlistno, wishlist_seqno, game_gameno, consumer_no, wishlist_date
+    FROM wishlist
+    ORDER BY wishlist_wishlistno ASC
+  </select>  
+  
+  <delete id="delete" parameterType="int">
+   DELETE FROM wishlist
+   WHERE wishlist_wishlistno = #{wishlist_wishlistno }
+  </delete>
+  
+  <delete id="delete2" parameterType="int">
+   DELETE FROM wishlist
+   WHERE wishlist_wishlistno = #{wishlist_wishlistno }
+  </delete>
+  
+  <delete id="delete_consumer" parameterType="int">
+   DELETE FROM wishlist
+   WHERE consumer_no = #{consumer_no}
+  </delete>
+  
+  
+  <select id="read" resultType="WishlistVO" parameterType="int">
+   SELECT wishlist_wishlistno, wishlist_seqno, game_gameno, consumer_no, wishlist_date
+   FROM wishlist
+   WHERE wishlist_wishlistno = #{wishlist_wishlistno }
+  </select>
+  
+  <!-- 카테고리별 검색 레코드 갯수 -->
+   <select id="search_count" resultType="int" parameterType="HashMap">
+     SELECT COUNT(*) as cnt
+     FROM wishlist
+     WHERE consumer_no= #{consumer_no}
+   </select>       
+  
+  
+      
+  <!-- 페이징 -->
+   <select id="game_by_consumer_no_paging" resultType="Game_Wishlist_VO" parameterType="HashMap">
+     SELECT  game_gameno, game_title, game_writing, game_release , game_developer, game_price, 
+             game_image, game_sale, wishlist_wishlistno, wishlist_date, consumer_no, r  
+     FROM (
+                SELECT game_gameno, game_title, game_writing, game_release , game_developer, game_price, game_image, game_sale, 
+                wishlist_wishlistno, wishlist_date, consumer_no, rownum as r
+                FROM (
+                          SELECT l.game_gameno, l.game_title, l.game_writing, l.game_release , l.game_developer, l.game_price, l.game_image, l.game_sale, 
+                          w.wishlist_wishlistno, w.wishlist_date, c.consumer_no      
+                          
+                          FROM game l, wishlist w, consumer c
+                          WHERE l.game_gameno = w.game_gameno AND w.consumer_no = c.consumer_no AND c.consumer_no = #{consumer_no}
+                          ORDER BY game_gameno ASC
+                )
+     )
+     WHERE <![CDATA[ r >= #{startNum} AND r <= #{endNum} ]]>
+     <!-- 
+     1 page: WHERE r >= 1 AND r <= 10; 
+     2 page: WHERE r >= 11 AND r <= 20;
+     3 page: WHERE r >= 21 AND r <= 30;
+     -->                          
+   </select>
+  
+  
+  
+  
+  <resultMap type="Game_Wishlist_VO" id="Game_Wishlist_VO_Map">
+    <result column="l_game_gameno" property="game_gameno" />
+    <result column="l_game_title" property="game_title" />
+    <result column="l_game_price" property="game_price" />
+    <result column="l_game_sale" property="game_sale" />
+    <result column="l_game_writing" property="game_writing" />
+    <result column="l_game_release" property="game_release" />
+    <result column="l_game_developer" property="game_developer" />
+    <result column="l_game_image" property="game_image   " />  
+    <result column="w_wishlist_wishlistno" property="wishlist_wishlistno" />
+    <result column="w_wishlist_seqno" property="wishlist_seqno" />
+    <result column="w_wishlist_date" property="wishlist_date" />
+  </resultMap>
+  
+  
+  <select id="game_wishlist_consumer_no_list" parameterType="int" resultMap="Game_Wishlist_VO_Map">
+   SELECT l.game_gameno as l_game_gameno, l.game_title as l_game_title, l.game_release as l_game_release, l.game_developer as l_game_developer, l.game_image as l_game_image, 
+          l.game_price as l_game_price, l.game_writing as l_game_writing, l.game_sale as l_game_sale,
+          w.wishlist_wishlistno as w_wishlist_wishlistno, w.wishlist_seqno as w_wishlist_seqno, w.wishlist_date as w_wishlist_date, 
+          c.consumer_no as c_consumer_no                  
+    FROM game l, wishlist w, consumer c
+    WHERE l.game_gameno = w.game_gameno AND w.consumer_no = c.consumer_no AND c.consumer_no = #{consumer_no}
+    ORDER BY l.game_gameno ASC, w.wishlist_wishlistno DESC
+  
+  </select>
+  
+  
+  
+  
+  </mapper>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="dev.mvc.statistics.StatisticsDAOInter"> 
+  <!-- 출력 순서 오름차순 전체 목록 -->
+  <select id="read_top_statistics_code" resultType="StatisticsVO" parameterType="String">
+    SELECT statistics_no, statistics_code, statistics_title, statistics_data, statistics_rdate, r
+    FROM (
+        SELECT statistics_no, statistics_code, statistics_title, statistics_data, statistics_rdate, rownum as r
+        FROM (
+            SELECT statistics_no, statistics_code, statistics_title, statistics_data, statistics_rdate
+            FROM statistics
+            WHERE statistics_code=#{statistics_code}
+            ORDER BY statistics_no DESC
+        )
+    )
+    WHERE r = 1
+  </select>
+  
+  <update id="age_update" parameterType="String">
+	  update statistics
+	  set statistics_data = #{statistics_data}   <!-- q'$[30, 32, 41, 44, 40, 37, 29]$' , [30, 32, 41, 44, 40, 37, 29]  -->
+	  where statistics_no = 6
+  </update>
+  
+  <update id="game_tend_update" parameterType="String">
+    update statistics
+    set statistics_data = #{statistics_data}   <!-- [['Sony',7], ['Samsumg',13.3], ['LG',14.7], ['Vizio',5.2], ['Insignia', 1.2]] -->
+    where statistics_no = 7
+  </update>
+           
+</mapper>

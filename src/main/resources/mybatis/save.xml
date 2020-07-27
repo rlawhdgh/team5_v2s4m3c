@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<mapper namespace="dev.mvc.save.SaveDAOInter">
+ <insert id="create" parameterType="SaveVO">
+    <selectKey keyProperty="makeno" resultType="int" order="BEFORE">
+      SELECT save_seq.nextval FROM dual
+    </selectKey>
+    INSERT INTO save(makeno, survey_cateno, question, item1, item2, item3, period, wdate, word, cnt, vote, passwd)
+    VALUES(#{makeno}, #{survey_cateno}, #{question}, #{item1}, #{item2}, #{item3}, #{period}, sysdate, #{word}, #{cnt}, #{vote}, #{passwd, jdbcType=VARCHAR})
+  </insert>
+    <select id="survey_list_all" resultType="SaveVO">
+    SELECT makeno, survey_cateno, question, period, wdate, cnt
+    FROM save 
+    ORDER BY makeno DESC
+  </select>  
+    <select id="list" resultType="SaveVO" parameterType="int">
+    SELECT makeno, survey_cateno, question, period, wdate, cnt
+    FROM save 
+    WHERE survey_cateno = #{survey_cateno}
+    ORDER BY makeno DESC
+  </select>  
+     <select id="list_by_survey_cateno_search" resultType="SaveVO" parameterType="HashMap">
+     SELECT makeno, survey_cateno, question, period, word ,cnt
+     FROM save
+     <choose>
+       <when test="word == null or word == ''"> <!-- 검색하지 않는 경우 -->
+         WHERE survey_cateno=#{survey_cateno}
+       </when>
+       <otherwise>
+         WHERE survey_cateno=#{survey_cateno} AND (title LIKE '%' || #{, word} || '%' 
+                                                OR question LIKE '%' || #{, word} || '%' 
+                                                OR , word LIKE '%' || #{, word} || '%')
+       </otherwise>
+     </choose>
+     ORDER BY makeno DESC   
+   </select>
+   
+      <!-- 카테고리별 검색 목록 + 페이징 -->
+   <select id="list_by_survey_cateno_search_paging" 
+              resultType="SaveVO" parameterType="HashMap">
+     SELECT makeno, survey_cateno, question, period, wdate, word, cnt r
+     FROM (
+                SELECT makeno, survey_cateno, question, period, wdate, word, cnt,
+                       rownum as r
+                FROM (
+                          SELECT makeno, survey_cateno, question, period, wdate, word, cnt
+                        
+                          FROM save
+                          <choose>
+                            <when test="word == null or word == ''"> <!-- 검색하지 않는 경우 -->
+                              WHERE survey_cateno=#{survey_cateno}
+                            </when>
+                            <otherwise>
+                            WHERE survey_cateno=#{survey_cateno} AND (title LIKE '%' || #{, word} || '%' 
+                                                             OR question LIKE '%' || #{, word} || '%' 
+                                                             OR , word LIKE '%' || #{, word} || '%')
+                            </otherwise>
+                          </choose>
+                          ORDER BY makeno DESC
+                )
+     )
+     WHERE <![CDATA[ r >= #{startNum} AND r <= #{endNum} ]]>
+     <!-- 
+     1 page: WHERE r >= 1 AND r <= 10; 
+     2 page: WHERE r >= 11 AND r <= 20;
+     3 page: WHERE r >= 21 AND r <= 30;
+     -->                          
+   </select>
+     <select id="search_count" resultType="int" parameterType="HashMap">
+     SELECT COUNT(*) as cnt
+     FROM save
+     <choose>
+       <when test="word == null or word == ''">
+         WHERE survey_cateno=#{survey_cateno}
+       </when>
+       <otherwise>
+        WHERE survey_cateno=#{survey_cateno} AND (title LIKE '%' || #{word} || '%' 
+                                              OR question LIKE '%' || #{word} || '%' 
+                                              OR word LIKE '%' || #{word} || '%')
+       </otherwise>
+     </choose>
+   </select>       
+  
+   <!-- 조회, id: read, 입력: survey_cateno, 리턴: Survey_cateVO -->
+  <select id="read" resultType="SaveVO" parameterType="int">
+    SELECT makeno, survey_cateno, question, item1, item2, item3, period, wdate, word
+    FROM save
+    WHERE makeno=#{makeno}
+  </select>  
+    <update id="update" parameterType="SaveVO">
+    UPDATE save
+    SET survey_cateno=#{survey_cateno}, question=#{question}, item1=#{item1}, item2=#{item2}, item3=#{item3}
+    WHERE makeno = #{makeno}
+  </update>
+   <delete id="delete" parameterType="int">
+    DELETE FROM save
+    WHERE makeno=#{makeno}
+  </delete>
+    <!-- 패스워드 검사 -->
+  <select id="passwd_check" parameterType="HashMap" resultType="int">
+    SELECT COUNT(*) as passwd_cnt
+    FROM save
+    WHERE makeno=#{makeno} AND passwd=#{passwd, jdbcType=VARCHAR}
+  </select>
+</mapper>

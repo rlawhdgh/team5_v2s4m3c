@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<mapper namespace="dev.mvc.result.ResultDAOInter">
+  <insert id="create" parameterType="ResultVO">
+    INSERT INTO result(resultno, item1no, item2no, item3no, count)
+    VALUES(result_seq.nextval, #{item1no}, #{item2no}, #{item3no}, #{count})   
+  </insert>
+     <!-- 조회, id: read, 입력: survey_cateno, 리턴: Survey_cateVO -->
+  <select id="read" resultType="ResultVO" parameterType="int">
+    SELECT resultno, item1no, item2no, item3no, count
+    FROM result
+    WHERE resultno=#{resultno}
+  </select>  
+    <select id="list" resultType="ResultVO">
+    SELECT  resultno, item1no, item2no, item3no, count
+    FROM result
+    ORDER BY resultno ASC 
+  </select>
+</mapper>

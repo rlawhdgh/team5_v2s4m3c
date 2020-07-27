@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<!-- dev.mvc.pay_check.Pay_checkDAOInter 패키지에 등록된 interface 명시,
+      패키지명과 인터페이스명은 실제로 존재해야함,
+      Spring이 내부적으로 자동으로 interface를 구현해줌. -->
+<mapper namespace="dev.mvc.point.PointDAOInter"> 
+  <!-- 
+  insert: INSERT SQL 실행
+  id: Spring에서 호출시 사용
+  parameterType: 전달받는 데이터 객체
+  return: 등록한 레코드 갯수 리턴
+  SQL선언시 ';'은 삭제
+  #{}: ? 동일
+  #{name}: public String getName(){...
+  -->
+  
+   <insert id="create" parameterType="PointVO">
+    INSERT INTO point(point_pointno, point_now, consumer_no)
+    VALUES(point_seq.nextval, #{point_now}, #{consumer_no}) 
+   </insert>
+  
+   <select id="list_all" resultType="PointVO">
+    SELECT point_pointno, point_now, consumer_no
+    FROM point
+    ORDER BY point_pointno ASC
+   </select>
+   
+  <update id="update_point" parameterType="PointVO">
+    UPDATE point
+    SET point_now = #{point_now}
+    WHERE consumer_no = #{consumer_no}
+  </update>
+  
+  
+  
+  
+  <select id="read" resultType="PointVO" parameterType="int">
+   SELECT point_pointno, point_now, consumer_no
+   FROM point
+   WHERE consumer_no = #{consumer_no}
+  </select>
+
+   
+</mapper>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<!-- dev.mvc.categrp.CategrpDAOInter 패키지에 등록된 interface 명시,
+      패키지명과 인터페이스명은 실제로 존재해야함,
+      Spring이 내부적으로 자동으로 interface를 구현해줌. -->
+<mapper namespace="dev.mvc.grade.GradeDAOInter"> 
+
+  <insert id="create" parameterType="GradeVO">
+    INSERT INTO grade(grade_no, grade_name)
+    VALUES(#{grade_no}, #{grade_name})
+  </insert>
+
+  <select id="list" resultType="GradeVO">
+    SELECT grade_no, grade_name
+    FROM grade
+    ORDER BY grade_no ASC
+  </select>
+  
+  <select id="read" parameterType="int" resultType="GradeVO">
+    SELECT grade_no, grade_name
+    FROM grade
+    WHERE grade_no = #{grade_no}
+  </select>
+  
+  <update id="update" parameterType="GradeVO">
+    UPDATE grade
+    SET grade_name= #{grade_name}
+    WHERE grade_no = #{grade_no}
+  </update>
+  
+  <delete id="delete" parameterType="int">
+    DELETE FROM grade
+    WHERE grade_no = #{grade_no}
+  </delete>
+
+
+</mapper>

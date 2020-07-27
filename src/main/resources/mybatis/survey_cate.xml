@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<!-- dev.mvc.cate.CateDAOInter 패키지에 등록된 interface 명시,
+      패키지명과 인터페이스명은 실제로 존재해야함,
+      Spring이 내부적으로 자동으로 interface를 구현해줌. -->
+<mapper namespace="dev.mvc.survey_cate.Survey_cateDAOInter"> 
+  <insert id="create" parameterType="Survey_cateVO">
+   INSERT INTO survey_cate(survey_cateno, survey_categrpno, survey_name, survey_rdate, survey_cnt)
+   VALUES(survey_cate_seq.nextval, #{survey_categrpno}, #{survey_name},  sysdate, #{survey_cnt})
+  </insert>
+  
+  <!-- 조회, id: read, 입력: survey_cateno, 리턴: Survey_cateVO -->
+  <select id="read" resultType="Survey_cateVO" parameterType="int">
+    SELECT survey_cateno, survey_categrpno, survey_name, survey_rdate, survey_cnt
+    FROM survey_cate
+    WHERE survey_cateno=#{survey_cateno}
+  </select>  
+  
+  <update id="update" parameterType="Survey_cateVO">
+    UPDATE survey_cate
+    SET survey_categrpno=#{survey_categrpno}, survey_name=#{survey_name}, survey_cnt=#{survey_cnt}
+    WHERE survey_cateno = #{survey_cateno}
+  </update>
+  
+  <delete id="delete" parameterType="int">
+    DELETE FROM survey_cate
+    WHERE survey_cateno = #{survey_cateno}
+  </delete>
+
+  
+ 
+<!--   <update id="update_visible" parameterType="Survey_cateVO">
+    UPDATE survey_cate
+    SET survey_visible=#{survey_visible}
+    WHERE survey_cateno=#{survey_cateno}
+  </update> -->
+
+  <!-- categrp + cate inner join,  1 : 다, 통합 VO -->
+  <select id="list_join" resultType="Survey_categrp_Cate_join">
+    SELECT r.survey_categrpno as r_survey_categrpno, r.survey_name as r_survey_name,
+               c.survey_cateno, c.survey_categrpno, c.survey_name,  c.survey_rdate, c.survey_cnt
+    FROM survey_categrp r, survey_cate c
+    WHERE r.survey_categrpno = c.survey_categrpno
+    ORDER BY r.survey_categrpno ASC
+  </select>
+    
+  <!-- categrpno 별 cate 목록: categrp + cate inner join,  1 : 다, 통합 VO -->
+  <select id="list_join_by_categrpno" resultType="Survey_categrp_Cate_join" parameterType="int">
+    SELECT r.survey_categrpno as r_survey_categrpno, r.survey_name as r_survey_name,
+               c.survey_cateno, c.survey_categrpno, c.survey_name,  c.survey_rdate, c.survey_cnt
+    FROM survey_categrp r, survey_cate c
+    WHERE (r.survey_categrpno = c.survey_categrpno) AND r.survey_categrpno=#{survey_categrpno}
+    ORDER BY r.survey_categrpno ASC
+  </select>
+
+  <!-- 실제의 컬럼을 어떤 자바 변수와 대응 시킬것인지 선언, 
+        일반적으로 DBMS 컬럼명과 VO class 변수명이 다를때 사용 -->
+  <resultMap type="Survey_categrp_Cate_VO" id="Survey_categrp_Cate_VO_Map">
+    <association property="survey_categrpVO" javaType="Survey_categrpVO">
+      <result column="r_survey_categrpno" property="survey_categrpno" />
+      <result column="r_survey_name" property="survey_name" />
+    </association>
+    <association property="survey_cateVO" javaType="Survey_cateVO">
+      <result column="c_survey_cateno" property="survey_cateno" />
+      <result column="c_survey_categrpno" property="survey_categrpno" />
+      <result column="c_survey_name" property="survey_name" />
+<!--       <result column="c_survey_visible" property="survey_visible" /> -->
+      <result column="c_survey_rdate" property="survey_rdate" />
+      <result column="c_survey_cnt" property="survey_cnt" />       
+    </association>
+  </resultMap>
+
+  <!-- 참고 1) categrp + cate inner join,  1 : 다 -->
+  <select id="list_all" resultMap="Survey_categrp_Cate_VO_Map">
+    SELECT r.survey_categrpno as r_survey_categrpno, r.survey_name as r_survey_name,
+               c.survey_cateno as c_survey_cateno, c.survey_categrpno as c_survey_categrpno, c.survey_name as c_survey_name,
+               c.survey_rdate as c_survey_rdate, c.survey_cnt as c_survey_cnt
+    FROM survey_categrp r, survey_cate c
+    WHERE r.survey_categrpno = c.survey_categrpno
+    ORDER BY r.survey_categrpno ASC
+  </select>
+    
+  <resultMap type="Survey_categrp_Cate_VO_list" id="Survey_categrp_Cate_VO_list_Map">
+    <result column="survey_categrpno" property="survey_categrpno" />
+    <result column="survey_name" property="survey_name" />
+   <!--  <result column="survey_visible" property="survey_visible" /> -->
+    <result column="survey_rdate" property="survey_rdate" />
+    <collection property="survey_cate_list" javaType="java.util.List"
+      column="survey_categrpno" select="list_seqno_asc_by_categrpno">
+    </collection>
+    
+  </resultMap>
+
+  <!-- 참고 2) 조회, id: read, 입력: categrpno, 리턴: CategrpVO -->
+  <select id="list_by_categrpno" resultMap="Survey_categrp_Cate_VO_list_Map"  
+                                             parameterType="int">
+    SELECT  survey_categrpno, survey_name, survey_rdate
+    FROM survey_categrp
+    WHERE survey_categrpno=#{survey_categrpno}
+  </select>
+
+
+  <update id="increaseCnt" parameterType="int">
+    UPDATE survey_cate 
+    SET survey_cnt = survey_cnt + 1 
+    WHERE survey_cateno=#{survey_cateno}
+  </update>
+
+  <update id="decreaseCnt" parameterType="int">
+    UPDATE survey_cate 
+    SET survey_cnt = survey_cnt - 1 
+    WHERE survey_cateno=#{survey_cateno}
+  </update>
+            
+</mapper>
+

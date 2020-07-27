@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace = "dev.mvc.openspace.OpenspaceDAOInter">
+
+  <!-- 등록 -->
+  <insert id="create" parameterType="OpenspaceVO">
+      <selectKey keyProperty="openspace_no" resultType="int" order="BEFORE">
+        select openspace_seq.nextval from dual
+      </selectKey>
+    INSERT INTO openspace(openspace_no, consumer_no,
+                       openspace_title, openspace_content, openspace_division, openspace_cnt, openspace_seqno,
+                       openspace_visible,openspace_youtube,
+                       openspace_rdate, openspace_redate)
+    VALUES (#{openspace_no}, #{consumer_no}, #{openspace_title}, #{openspace_content}, #{openspace_division}, #{openspace_cnt},
+    (SELECT NVL(MAX(openspace_seqno), 0) + 1 as openspace_seqno FROM openspace), #{openspace_visible},#{openspace_youtube},
+     sysdate, sysdate)
+    
+    
+  </insert>
+  
+  <!-- 출력 순서별 목록 -->
+  <select id="list" resultType="OpenspaceVO" parameterType="HashMap">
+    SELECT openspace_no, consumer_no,
+                       openspace_title, openspace_content, openspace_division, openspace_cnt, openspace_seqno,
+                       openspace_visible, openspace_rdate, openspace_redate 
+    FROM openspace
+    <choose>
+      <when test="abc =='abc'">
+       WHERE openspace_visible ='Y'
+      </when>
+    </choose>
+    ORDER BY openspace_seqno DESC   
+  </select>
+  
+  <!-- 1건의 레코드 조회 -->
+   <select id="read" resultType="OpenspaceVO" parameterType="int">
+    SELECT o.openspace_no, o.consumer_no,
+                       o.openspace_title, o.openspace_content, o.openspace_division, o.openspace_cnt, o.openspace_seqno,
+                       o.openspace_visible, o.openspace_youtube,
+                       o.openspace_rdate, o.openspace_redate , c.consumer_nickname 
+    FROM openspace o, consumer c
+    WHERE o.consumer_no=c.consumer_no AND o.openspace_no =#{openspace_no}
+   </select>
+   
+   <!-- 조회수 증가 -->
+   <update id="cnt_up" parameterType="int">
+    UPDATE openspace
+    SET openspace_cnt = openspace_cnt+1
+    WHERE openspace_no =#{openspace_no}      
+   </update>
+   
+   <!-- 수정 -->
+   <update id="update" parameterType="OpenspaceVO">
+     UPDATE openspace
+     SET  consumer_no=#{consumer_no}, openspace_title=#{openspace_title}, openspace_youtube=#{openspace_youtube},
+            openspace_division=#{openspace_division}, openspace_content =#{openspace_content}, 
+            openspace_seqno=#{openspace_seqno}, openspace_visible=#{openspace_visible}, openspace_redate=sysdate
+     WHERE openspace_no=#{openspace_no}
+   </update>   
+   
+   <!-- 삭제 -->
+   <delete id="delete" parameterType="int">
+      DELETE FROM openspace
+      WHERE openspace_no = #{openspace_no}
+   </delete>
+   
+   <!-- 다음글 이전글 조회 -->
+   <select id="read_up_down" resultType="OpenspaceVO" parameterType="HashMap">
+      SELECT * FROM
+        (
+          SELECT openspace_seqno, openspace_title, openspace_visible,
+          lead(openspace_division, 1) over (order by openspace_seqno) next_division,
+          lead(openspace_no, 1) over (order by openspace_seqno) next_no,
+          lead(openspace_title, 1) over (order by openspace_seqno) next_title,
+          lag(openspace_division,1) over(order by openspace_seqno)pre_division,
+          lag(openspace_no,1) over(order by openspace_seqno)pre_no,
+          lag(openspace_title,1) over(order by openspace_seqno)pre_title
+          from openspace
+     <choose>
+      <when test="abc =='abc'">
+       WHERE openspace_visible ='Y'
+      </when>
+    </choose>
+          )
+      WHERE openspace_seqno=#{openspace_seqno}
+      
+      
+   </select>
+   
+   <!--  제목검색 -->
+   <select id="title_list" resultType="OpenspaceVO" parameterType="String">
+    SELECT openspace_no, consumer_no,
+                       openspace_title, openspace_content, openspace_division, openspace_cnt, openspace_seqno,
+                       openspace_visible, openspace_rdate, openspace_redate 
+    FROM openspace
+    WHERE openspace_title like #{word}
+    ORDER BY openspace_seqno DESC
+   </select>
+   
+   <!--  내용검색 -->
+   <select id="content_list" resultType="OpenspaceVO" parameterType="String">
+    SELECT openspace_no, consumer_no,
+                       openspace_title, openspace_content, openspace_division, openspace_cnt, openspace_seqno,
+                       openspace_visible, openspace_rdate, openspace_redate 
+    FROM openspace
+    WHERE openspace_content like #{word}
+    ORDER BY openspace_seqno DESC
+   </select>
+   
+   <!--  제목+내용검색 -->
+   <select id="title_content_list" resultType="OpenspaceVO" parameterType="String">
+    SELECT openspace_no, consumer_no,
+                       openspace_title, openspace_content, openspace_division, openspace_cnt, openspace_seqno,
+                       openspace_visible, openspace_rdate, openspace_redate 
+    FROM openspace
+    WHERE openspace_title like #{word} or openspace_content like #{word}
+    ORDER BY openspace_seqno DESC
+   </select>
+   
+   
+   <!-- 검색별 레코드 수 -->
+   <select id="search_count" resultType="int" parameterType="HashMap">
+      SELECT COUNT(*) as cnt
+      FROM openspace
+      <choose>
+      <when test="search =='title'"> <!-- 제목 검색 -->
+        WHERE openspace_title LIKE '%' || #{word} || '%'
+      </when>
+      <when test="search =='contents'"> <!-- 내용 검색 -->
+        WHERE openspace_content LIKE '%' || #{word} || '%'
+      </when>
+      <when test="search =='name_contents'"> <!-- 제목+내용 -->
+        WHERE openspace_content LIKE '%' || #{word} || '%'
+      </when>   
+      <when test="search ==''">
+      WHERE openspace_title LIKE '%%'    
+     </when>                                                       
+    </choose> 
+    <choose>
+      <when test="abc =='abc'">
+       AND openspace_visible ='Y'
+      </when>
+    </choose>
+   </select>
+   
+   
+      <!-- 전체 레코드 수 -->
+   <select id="total_count" resultType="int">
+      SELECT COUNT(*) as cnt
+      FROM openspace
+
+   </select>
+   
+   <!-- 검색목록 + 페이징 -->
+    <select id="list_by_search_paging" resultType="OpenspaceVO" parameterType="HashMap">
+     SELECT openspace_no, consumer_no,
+                   openspace_title, openspace_content, openspace_division, openspace_cnt, openspace_seqno,
+                   openspace_visible, openspace_rdate, openspace_redate, consumer_nickname, r
+     FROM (
+                SELECT openspace_no, consumer_no,
+                   openspace_title, openspace_content, openspace_division, openspace_cnt, openspace_seqno,
+                   openspace_visible, openspace_rdate, openspace_redate , consumer_nickname, rownum as r
+                FROM (
+                          SELECT o.openspace_no, o.consumer_no,
+                   o.openspace_title, o.openspace_content, o.openspace_division, o.openspace_cnt, o.openspace_seqno,
+                   o.openspace_visible, o.openspace_rdate, o.openspace_redate, c.consumer_nickname
+                          FROM openspace o, consumer c
+                            <choose>
+                            <when test="search =='title'"> <!-- 제목 검색 -->
+                              WHERE o.consumer_no=c.consumer_no AND o.openspace_title LIKE '%' || #{word} || '%'
+                            </when>
+                            <when test="search =='contents'"> <!-- 내용 검색 -->
+                              WHERE o.consumer_no=c.consumer_no AND o.openspace_content LIKE '%' || #{word} || '%'
+                            </when>
+                            <when test="search =='name_contents'"> <!-- 제목+내용 -->
+                              WHERE o.consumer_no=c.consumer_no AND o.openspace_content LIKE '%' || #{word} || '%' OR o.openspace_title LIKE '%' || #{word} || '%'
+                            </when>  
+                             <when test="search ==''">
+                              WHERE o.consumer_no=c.consumer_no AND o.openspace_title LIKE '%%'    
+                             </when>                                                     
+                          </choose>
+                          <choose>
+                          <when test="abc =='abc'">
+                          AND o.openspace_visible ='Y'
+                          </when>
+                          </choose>
+                                 
+                          ORDER BY o.openspace_seqno DESC
+                )
+     )
+     WHERE <![CDATA[ r >= #{startNum} AND r <= #{endNum} ]]>
+     <!-- WHERE r >= #{startNum} AND r <= #{endNum} "<"태그로 인식해서 ERROR-->
+     <!-- 
+     1 page: WHERE r >= 1 AND r <= 10; 
+     2 page: WHERE r >= 11 AND r <= 20;
+     3 page: WHERE r >= 21 AND r <= 30;
+     -->                          
+   </select>
+   
+  <!-- 출력 모드 변경 --> 
+  <update id="update_visible" parameterType="OpenspaceVO">
+    UPDATE openspace
+    SET openspace_visible=#{openspace_visible}
+    WHERE openspace_no=#{openspace_no}
+  </update>
+  
+  
+   <select id="consumer_openspace_list" resultType="OpenspaceVO"  parameterType="int">
+SELECT o.openspace_no, o.consumer_no,
+                   o.openspace_title, o.openspace_content, o.openspace_division, o.openspace_cnt, o.openspace_seqno,
+                   o.openspace_visible, o.openspace_rdate, o.openspace_redate , o.openspace_youtube, c.consumer_nickname
+FROM openspace o, consumer c
+WHERE o.consumer_no = c.consumer_no and c.consumer_no=#{consumer_no}
+ORDER BY openspace_seqno DESC
+  </select>
+   
+
+</mapper>

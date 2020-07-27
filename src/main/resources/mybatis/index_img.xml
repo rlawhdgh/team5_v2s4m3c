@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace = "dev.mvc.index_img.Index_imgDAOInter">
+<insert id="create" parameterType="Index_imgVO">
+INSERT INTO index_img(index_img_no, index_img_fname, index_img_fupname, index_img_fsize, index_img_url, index_img_division, index_img_rdate)
+VALUES((SELECT NVL(MAX(index_img_no), 0) + 1 as index_img_no FROM index_img),
+              #{index_img_fname}, #{index_img_fupname}, #{index_img_fsize}, #{index_img_url}, #{index_img_division}, sysdate)
+</insert>
+
+<insert id="update_all" parameterType="Index_imgVO">
+INSERT INTO index_img(index_img_no, index_img_fname, index_img_fupname, index_img_fsize, index_img_url, index_img_division, index_img_rdate)
+VALUES(index_img_no= #{index_img_no},
+              #{index_img_fname}, #{index_img_fupname}, #{index_img_fsize}, #{index_img_url}, #{index_img_division}, sysdate)
+</insert>
+<update id="update" parameterType="Index_imgVO">
+     UPDATE index_img
+     SET index_img_url = #{index_img_url}, index_img_division = #{index_img_division}
+     WHERE index_img_no= #{index_img_no}
+</update>
+
+
+
+<select id="list" resultType="Index_imgVO">
+SELECT index_img_no, index_img_fname, index_img_fupname, index_img_fsize,
+           index_img_url, index_img_division, index_img_rdate 
+FROM index_img
+</select>
+
+<select id="list_main" resultType="Index_imgVO">
+SELECT index_img_no, index_img_fname, index_img_fupname, index_img_fsize,
+           index_img_url, index_img_division, index_img_rdate 
+FROM index_img
+where index_img_division = '메인'
+</select>
+
+
+<select id="list_event" resultType="Index_imgVO">
+SELECT index_img_no, index_img_fname, index_img_fupname, index_img_fsize,
+           index_img_url, index_img_division, index_img_rdate 
+FROM index_img
+where index_img_division = '이벤트'
+</select>
+
+
+<!-- 페이징 -->
+
+    <select id="list_by_paging" resultType="Index_imgVO" parameterType="HashMap">
+SELECT  index_img_no, index_img_fname, index_img_fupname, index_img_fsize, index_img_url, index_img_division, index_img_rdate, r
+FROM (
+           SELECT  index_img_no, index_img_fname, index_img_fupname, index_img_fsize, index_img_url, index_img_division, index_img_rdate  , rownum as r
+           FROM (
+                          SELECT index_img_no, index_img_fname, index_img_fupname, index_img_fsize, index_img_url, index_img_division, index_img_rdate 
+                          FROM index_img
+                          WHERE index_img_division = #{index_img_division}                     
+                          ORDER BY openspace_seqno DESC
+                )
+     )
+     WHERE <![CDATA[ r >= #{startNum} AND r <= #{endNum} ]]>
+     <!-- WHERE r >= #{startNum} AND r <= #{endNum} "<"태그로 인식해서 ERROR-->
+     <!-- 
+     1 page: WHERE r >= 1 AND r <= 10; 
+     2 page: WHERE r >= 11 AND r <= 20;
+     3 page: WHERE r >= 21 AND r <= 30;
+     -->                          
+   </select>
+   
+   <!-- 조회 -->
+   <select id="read" resultType="Index_imgVO" parameterType="int">
+    SELECT index_img_no, index_img_fname, index_img_fupname, index_img_fsize, index_img_url, index_img_division, index_img_rdate 
+    FROM index_img
+    where index_img_no = #{index_img_no}
+  </select>
+   
+   
+   <!-- 파일 삭제 -->
+    <delete id="delete" parameterType="int">
+      DELETE FROM index_img
+      WHERE index_img_no = #{index_img_no}
+   </delete>  
+
+
+</mapper>

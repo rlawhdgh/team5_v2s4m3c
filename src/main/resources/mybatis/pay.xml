@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<!-- dev.mvc.pay.PayDAOInter 패키지에 등록된 interface 명시,
+      패키지명과 인터페이스명은 실제로 존재해야함,
+      Spring이 내부적으로 자동으로 interface를 구현해줌. -->
+<mapper namespace="dev.mvc.pay.PayDAOInter"> 
+  <!-- 
+  insert: INSERT SQL 실행
+  id: Spring에서 호출시 사용
+  parameterType: 전달받는 데이터 객체
+  return: 등록한 레코드 갯수 리턴
+  SQL선언시 ';'은 삭제
+  #{}: ? 동일
+  #{name}: public String getName(){...
+  -->
+  <insert id="create" parameterType="PayVO">
+   INSERT INTO  pay(pay_payno, pay_cnt, pay_kind, pay_date, game_gameno, consumer_no )
+   VALUES(pay_seq.nextval, #{pay_cnt}, #{pay_kind}, sysdate, #{game_gameno }, #{consumer_no })
+  </insert>
+  
+  <select id="list_all" resultType="PayVO">
+    SELECT pay_payno, pay_cnt, pay_kind, pay_date, game_gameno, consumer_no
+    FROM pay
+    ORDER BY pay_date ASC
+  </select> 
+  
+  <delete id="delete_catebag" parameterType="int">
+   DELETE FROM catebag
+   WHERE catebag_catebagno = #{catebag_catebagno}
+  </delete>
+  
+  <delete id="delete" parameterType="int">
+   DELETE FROM pay
+   WHERE pay_payno = #{pay_payno }
+  </delete>
+  
+  <select id="read" resultType="PayVO" parameterType="int">
+    SELECT pay_payno, pay_cnt, pay_kind, pay_date, game_gameno, consumer_no
+    FROM pay
+    WHERE pay_payno = #{pay_payno }
+  </select>
+  
+  
+  <resultMap type="Game_Pay_VO" id="Game_Pay_VO_Map">
+    <result column="l_game_gameno" property="game_gameno" />
+    <result column="l_game_title" property="game_title" />
+    <result column="l_game_price" property="game_price" />
+    <result column="l_game_writing" property="game_writing" />
+    <result column="l_game_release" property="game_release" />
+    <result column="l_game_developer" property="game_developer" />
+    <result column="l_game_image" property="game_image" />
+    <result column="l_game_sale" property="game_sale" />
+    <result column="p_pay_payno" property="pay_payno" />
+    <result column="p_pay_cnt" property="pay_cnt" />
+    <result column="p_pay_date" property="pay_date" />
+    <result column="p_pay_kind" property="pay_kind" />
+  </resultMap>
+  
+  
+  <select id="game_pay_consumer_no_list" parameterType="int" resultMap="Game_Pay_VO_Map">
+   SELECT l.game_gameno as l_game_gameno, l.game_title as l_game_title, l.game_release as l_game_release, l.game_developer as l_game_developer, l.game_image as l_game_image, 
+          l.game_price as l_game_price, l.game_writing as l_game_writing, l.game_sale as l_game_sale,
+          p.pay_payno as p_pay_payno, p.pay_cnt as p_pay_cnt, p.pay_date as p_pay_date, p.pay_kind as p_pay_kind 
+          c.consumer_no as c_consumer_no             
+   FROM game l, pay p, consumer c
+   WHERE l.game_gameno = p.game_gameno AND p.consumer_no = c.consumer_no AND c.consumer_no = #{consumer_no }
+
+   ORDER BY l.game_gameno ASC, p.pay_payno DESC
+  
+  </select>
+   
+  <!-- 카테고리별 검색 레코드 갯수 -->
+   <select id="search_count" resultType="int" parameterType="HashMap">
+     SELECT COUNT(*) as cnt
+     FROM pay
+     WHERE consumer_no= #{consumer_no}
+   </select>
+   
+   
+   <!-- 페이징 -->
+   <select id="pay_by_consumer_no_paging" resultType="Game_Pay_VO" parameterType="HashMap">
+     SELECT  game_gameno, game_title, game_writing, game_release , game_developer, game_price, game_image, pay_payno, pay_cnt, pay_date, pay_kind, consumer_no, game_sale, r   
+     FROM (
+           SELECT  game_gameno, game_title, game_writing, game_release , game_developer, game_price, game_image, pay_payno, pay_cnt, pay_date, pay_kind, consumer_no, game_sale,   
+                     rownum as r
+           FROM (
+                     SELECT   l.game_gameno, l.game_title, l.game_writing, l.game_release, l.game_developer, l.game_price, l.game_sale, l.game_image, p.pay_payno, p.pay_cnt, p.pay_date, p.pay_kind, c.consumer_no             
+                     FROM game l, pay p, consumer c    
+                     WHERE l.game_gameno = p.game_gameno AND p.consumer_no = c.consumer_no AND c.consumer_no = #{consumer_no}
+                     ORDER BY game_gameno DESC
+                )
+     )
+     WHERE <![CDATA[ r >= #{startNum} AND r <= #{endNum} ]]>
+     <!-- 
+     1 page: WHERE r >= 1 AND r <= 10; 
+     2 page: WHERE r >= 11 AND r <= 20;
+     3 page: WHERE r >= 21 AND r <= 30;
+     -->                          
+   </select>     
+  
+  
+ </mapper>

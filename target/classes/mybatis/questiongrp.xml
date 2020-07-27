@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace = "dev.mvc.questiongrp.QuestiongrpDAOInter">
+  <insert id="create" parameterType="QuestiongrpVO">
+    INSERT INTO questiongrp(questiongrp_no, admin_no, questiongrp_name, questiongrp_seqno)
+    VALUES (questiongrp_seq.nextval,#{admin_no}, #{questiongrp_name},
+     (SELECT NVL(MAX(questiongrp_seqno), 0) + 1 as questiongrp_seqno FROM questiongrp))
+  </insert>
+  
+   <!-- 전체 리스트 -->
+   <select id="list" resultType="QuestiongrpVO">
+    SELECT questiongrp_no, admin_no, questiongrp_name, questiongrp_seqno
+    FROM questiongrp
+    ORDER BY questiongrp_seqno ASC
+  </select>
+  
+  <!-- 수정 -->
+   <update id="update" parameterType="QuestiongrpVO">
+    UPDATE questiongrp
+    set questiongrp_name = #{questiongrp_name}, questiongrp_seqno = #{questiongrp_seqno}
+    where questiongrp_no = #{questiongrp_no}
+   </update>  
+   
+   
+      <!-- 삭제 -->
+   <delete id="delete" parameterType="int">
+      DELETE FROM questiongrp
+      WHERE questiongrp_no = #{questiongrp_no}
+   </delete>
+  
+  
+
+
+</mapper>

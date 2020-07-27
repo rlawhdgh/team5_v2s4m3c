@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<!-- dev.mvc.categrp.CategrpDAOInter 패키지에 등록된 interface 명시,
+      패키지명과 인터페이스명은 실제로 존재해야함,
+      Spring이 내부적으로 자동으로 interface를 구현해줌. -->
+<mapper namespace="dev.mvc.login.LoginDAOInter"> 
+
+	<insert id="create" parameterType="HashMap">
+		INSERT INTO login(login_no , login_time, login_ip, consumer_no)
+		VALUES (login_seq.nextval, SYSDATE, #{ip} ,#{consumer_no})
+	</insert>
+  
+  <select id="read" parameterType="int" resultType="LoginVO">
+	  select login_no, login_time, login_ip, consumer_no
+		from login
+		where consumer_no = #{consumer_no}
+		order by login_time desc
+  </select>
+
+
+</mapper>

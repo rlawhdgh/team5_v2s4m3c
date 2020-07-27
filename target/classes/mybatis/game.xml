@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dev.mvc.game.GameDAOInter"> 
+
+  <insert id="create" parameterType="GameVO">
+    <selectKey keyProperty="game_gameno" resultType="int" order="BEFORE">
+      SELECT game_gameno_seq.nextval FROM dual
+    </selectKey>
+    INSERT INTO game(game_gameno, kind_kindno, game_title,
+                          game_writing, game_character, game_require, game_brief, game_price, 
+                          game_sale, game_release, game_developer, game_rdate)
+    VALUES(#{game_gameno}, #{kind_kindno}, #{game_title}, #{game_writing}, 
+              #{game_character},#{game_require},#{game_brief}, #{game_price}, 
+              #{game_sale}, #{game_release}, #{game_developer}, sysdate)
+  </insert>
+  
+  <select id="list_all" resultType="GameVO">
+    SELECT k.kind_kindno, k.kind_kindname, g.game_gameno, g.kind_kindno, g.game_title, g.game_youtube, g.game_image, 
+               g.game_writing, g.game_character, g.game_require, g.game_brief, g.game_price, g.game_sale, g.game_release,
+               g.game_developer, g.game_rdate
+    FROM kind k, game g
+     WHERE k.kind_kindno = g.kind_kindno
+    ORDER BY k.kind_kindno ASC, g.game_gameno ASC
+  </select>  
+ 
+ <select id="list_join" resultType="GameVO" parameterType="int">
+    SELECT k.kind_kindno, k.kind_kindname,
+               g.game_gameno, g.game_title,
+               g.game_writing, g.game_price, g.game_sale,
+               game_image ,g.game_developer ,g.game_rdate
+    FROM kind k, game g
+    WHERE k.kind_kindno = g.kind_kindno and k.kind_kindno =#{kind_kindno}
+    ORDER BY k.kind_kindno ASC, g.game_gameno ASC
+ </select>
+ 
+  <select id="game_join_by_kindno" resultType="Kind_game_join" parameterType="int">
+    SELECT k.kind_kindno, k.kind_kindname,
+               g.game_gameno, g.game_title,
+               g.game_writing, g.game_price, g.game_sale,
+               game_image ,g.game_developer ,g.game_rdate
+    FROM kind k, game g
+    WHERE k.kind_kindno = g.kind_kindno and k.kind_kindno =#{kind_kindno}
+    ORDER BY k.kind_kindno ASC, g.game_gameno ASC
+ </select>
+ 
+  <!-- 최신 게임순 -->
+  <select id="list_rdate" resultType="GameVO">
+   SELECT   k.kind_kindno, k.kind_kindname, g.game_gameno, g.kind_kindno, g.game_title, g.game_youtube, g.game_image, 
+               g.game_writing, g.game_character, g.game_require, g.game_brief, g.game_price, g.game_sale, g.game_release,
+               g.game_developer, g.game_rdate
+   FROM kind k, game g
+   WHERE k.kind_kindno = g.kind_kindno
+   ORDER BY game_rdate DESC   
+  </select>
+  
+  <!-- 할인순 -->
+  <select id="list_sale" resultType="GameVO">
+    SELECT  k.kind_kindno, k.kind_kindname, g.game_gameno, g.kind_kindno, g.game_title, g.game_youtube, g.game_image, 
+               g.game_writing, g.game_character, g.game_require, g.game_brief, g.game_price, g.game_sale, g.game_release,
+               g.game_developer, g.game_rdate
+    FROM kind k, game g
+    WHERE k.kind_kindno = g.kind_kindno and g.game_price > 0
+    ORDER BY (g.game_price-g.game_sale)/g.game_price DESC   
+  </select>
+  
+  <!-- 무료 게임 -->
+  <select id="list_free" resultType="GameVO">
+    SELECT  k.kind_kindno, k.kind_kindname, g.game_gameno, g.kind_kindno, g.game_title, g.game_youtube, g.game_image, 
+               g.game_writing, g.game_character, g.game_require, g.game_brief, g.game_price, g.game_sale, g.game_release,
+               g.game_developer, g.game_rdate
+    FROM kind k, game g
+    WHERE g.game_price = 0 and k.kind_kindno = g.kind_kindno
+  </select>
+  
+ <select id="read" resultType="GameVO" parameterType="int">
+    SELECT game_gameno, kind_kindno, game_title, game_youtube, game_image, 
+              game_writing, game_character, game_require, game_brief, game_price, 
+              game_sale, game_release, game_developer, game_rdate 
+    FROM game
+    WHERE game_gameno = #{game_gameno}
+ </select> 
+ 
+  <!-- MP3 등록, 수정, 삭제 -->
+  <update id="game_image" parameterType="HashMap">
+    UPDATE game
+    SET game_image=#{game_image}
+    WHERE game_gameno=#{game_gameno}
+  </update>
+  
+  <!-- Youtube 등록, 수정, 삭제 -->
+  <update id="game_youtube" parameterType="HashMap">
+    UPDATE game
+    SET game_youtube=#{game_youtube}
+    WHERE game_gameno=#{game_gameno} 
+  </update>
+  
+  <update id="update" parameterType="GameVO">
+    UPDATE game
+    SET game_title=#{game_title}, game_writing=#{game_writing}, game_character=#{game_character}, game_require=#{game_require},
+         game_brief=#{game_brief}, game_price=#{game_price}, game_sale=#{game_sale}, game_release=#{game_release},
+         game_developer=#{game_developer}
+    WHERE game_gameno=#{game_gameno}
+  </update>
+  
+  <delete id="delete" parameterType="int">
+    DELETE FROM game
+    WHERE game_gameno=#{game_gameno}
+  </delete>
+
+</mapper>

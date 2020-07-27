@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<!-- dev.mvc.catebag.CatebagDAOInter 패키지에 등록된 interface 명시,
+      패키지명과 인터페이스명은 실제로 존재해야함,
+      Spring이 내부적으로 자동으로 interface를 구현해줌. -->
+<mapper namespace="dev.mvc.catebag.CatebagDAOInter"> 
+  <!-- 
+  insert: INSERT SQL 실행
+  id: Spring에서 호출시 사용
+  parameterType: 전달받는 데이터 객체
+  return: 등록한 레코드 갯수 리턴
+  SQL선언시 ';'은 삭제
+  #{}: ? 동일
+  #{name}: public String getName(){...
+  --> 
+  <select id="read_check" resultType="int" parameterType="int">
+    SELECT COUNT(game_gameno) as cnt
+    FROM catebag
+    WHERE game_gameno=#{game_gameno}
+  </select>
+  
+  <delete id="delete_check" parameterType="int">
+   DELETE FROM catebag
+   WHERE game_gameno=#{game_gameno}
+  </delete>
+   
+  <insert id="create" parameterType="CatebagVO">
+    INSERT INTO catebag(catebag_catebagno , catebag_cnt, catebag_sum, catebag_seqno, game_gameno, consumer_no, catebag_date)
+    VALUES(catebag_seq.nextval, #{catebag_cnt}, #{catebag_sum}, #{catebag_seqno}, #{game_gameno}, #{consumer_no}, sysdate) 
+  </insert>
+  
+  <insert id="create_pay" parameterType="PayVO">
+   INSERT INTO  pay(pay_payno, pay_cnt, pay_date, game_gameno, consumer_no )
+   VALUES(pay_seq.nextval, #{pay_cnt}, sysdate, #{game_gameno }, #{consumer_no })
+  </insert>
+  
+  <select id="list_all" resultType="CatebagVO">
+   SELECT catebag_catebagno , catebag_cnt, catebag_sum, catebag_seqno, game_gameno, consumer_no, catebag_date
+   FROM catebag
+   ORDER BY catebag_catebagno ASC 
+  </select>
+  
+  <delete id="delete" parameterType="int">
+   DELETE FROM catebag
+   WHERE catebag_catebagno = #{catebag_catebagno}
+  </delete>
+  
+  <delete id="delete2" parameterType="int">
+   DELETE FROM catebag
+   WHERE catebag_catebagno = #{catebag_catebagno}
+  </delete>
+  
+  
+  <select id="read" resultType="CatebagVO" parameterType="int">
+   SELECT catebag_catebagno , catebag_cnt, catebag_sum, catebag_seqno, game_gameno, consumer_no, catebag_date
+   FROM catebag
+   WHERE catebag_catebagno = #{catebag_catebagno}
+  </select>
+  
+  <update id="update_cnt_up" parameterType="int">
+  UPDATE catebag
+  SET catebag_cnt = catebag_cnt+1
+  WHERE catebag_catebagno = #{catebag_catebagno}
+  </update>
+  
+  
+  <update id="update_cnt_down" parameterType="int">
+  UPDATE catebag
+  SET catebag_cnt = catebag_cnt-1
+  WHERE catebag_catebagno=#{catebag_catebagno}
+  </update>
+  
+  <update id="update_cnt" parameterType="int">
+    UPDATE catebag
+    SET catebag_cnt = #{catebag_cnt} 
+    WHERE catebag_catebagno = #{catebag_catebagno}
+  </update>
+  
+  <select id="checklist_contentsno" resultType="int" parameterType="HashMap">
+    SELECT COUNT(game_gameno) as cnt
+    FROM catebag
+    WHERE consumer_no = #{consumer_no } AND game_gameno= #{game_gameno}
+  </select>
+  
+  
+  <resultMap type="Game_Catebag_VO" id="Game_Catebag_VO_Map">
+    <result column="l_game_gameno" property="game_gameno" />
+    <result column="l_game_title" property="game_title" />
+    <result column="l_game_price" property="game_price" />
+    <result column="l_game_writing" property="game_writing" />
+    <result column="l_game_release" property="game_release" />
+    <result column="l_game_developer" property="game_developer" />
+    <result column="l_game_image" property="game_image" />
+    <result column="l_game_sale" property="game_sale" />
+    <result column="b_catebag_catebagno" property="catebag_catebagno" />
+    <result column="b_catebag_cnt" property="catebag_cnt" />
+    <result column="b_catebag_sum" property="catebag_sum" />
+    <result column="b_catebag_seqno" property="catebag_seqno" />
+    <result column="b_catebag_date" property="catebag_date" />
+  </resultMap>
+  
+  
+  <select id="game_catebag_consumer_no_list" parameterType="int" resultMap="Game_Catebag_VO_Map">
+   SELECT l.game_gameno as l_game_gameno, l.game_title as l_game_title, l.game_release as l_game_release, l.game_developer as l_game_developer, l.game_image as l_game_image, 
+          l.game_price as l_game_price, l.game_writing as l_game_writing, l.game_sale as l_game_sale,
+          b.catebag_catebagno as b_catebag_catebagno, b.catebag_cnt as b_catebag_cnt, b.catebag_sum as b_catebag_sum, b.catebag_seqno as b_catebag_seqno, 
+          b.catebag_date as b_catebag_date,
+          c.consumer_no as c_consumer_no                  
+   FROM game l, catebag b, consumer c
+   WHERE l.game_gameno = b.game_gameno AND b.consumer_no = c.consumer_no AND c.consumer_no = #{consumer_no }
+
+   ORDER BY l.game_gameno ASC, b.catebag_catebagno DESC
+  </select>
+  
+  <!--catebag + list join  -->
+  <!--  <resultMap type="Catebag_Pay_VO" id="Catebag_Pay_VO_Map">
+    <result column="l_list_contentsno" property="list_contentsno" />
+    <result column="l_list_title" property="list_title" />
+    <result column="l_list_price" property="list_price" />
+    <result column="l_list_writing" property="list_writing" />
+    <result column="l_list_release" property="list_release" />
+    <result column="l_list_developer" property="list_developer" />
+    <result column="l_list_images" property="list_images" />
+    <result column="b_catebag_catebagno" property="catebag_catebagno" />
+    <result column="b_catebag_cnt" property="catebag_cnt" />
+    <result column="b_catebag_sum" property="catebag_sum" />
+    <result column="b_catebag_seqno" property="catebag_seqno" />
+    <result column="b_catebag_date" property="catebag_date" />
+  </resultMap> -->
+  
+  <!--catebag + join  -->
+  <select id="catebag_pay_read" parameterType="int" resultType="Catebag_Pay_VO">
+   SELECT l.game_gameno, l.game_title, l.game_release, l.game_developer, l.game_image, l.game_sale, 
+          l.game_price, l.game_writing,
+          b.catebag_catebagno, b.catebag_cnt, b.catebag_sum, b.catebag_seqno, 
+          b.catebag_date          
+   FROM game l, catebag b
+   WHERE l.game_gameno = b.game_gameno  AND b.catebag_catebagno = #{catebag_catebagno}
+  </select>
+  
+  
+  
+  
+  <!-- 카테고리별 검색 레코드 갯수 -->
+   <select id="search_count" resultType="int" parameterType="HashMap">
+     SELECT COUNT(*) as cnt
+     FROM catebag
+     WHERE consumer_no= #{consumer_no}
+   </select>       
+  
+  
+      
+   <!-- 페이징 -->
+   <select id="catebag_by_consumer_no_paging" resultType="Game_Catebag_VO" parameterType="HashMap">
+     SELECT  game_gameno, game_title, game_writing, game_release , game_developer, game_price,  game_image, game_sale, 
+           catebag_catebagno, catebag_cnt, catebag_sum, catebag_date, consumer_no, r  
+     FROM (
+                SELECT game_gameno, game_title, game_writing, game_release , game_developer, game_price, game_image, game_sale,
+                catebag_catebagno , catebag_cnt, catebag_sum, catebag_date, consumer_no, rownum as r
+                FROM (
+                          SELECT l.game_gameno, l.game_title, l.game_writing, l.game_release , l.game_developer, l.game_price, l.game_image, l.game_sale,
+                          b.catebag_catebagno , b.catebag_cnt, b.catebag_sum, b.catebag_date, c.consumer_no      
+                          
+                          FROM game l, catebag b, consumer c
+                          WHERE  l.game_gameno = b.game_gameno AND b.consumer_no = c.consumer_no AND c.consumer_no = #{consumer_no}
+                          ORDER BY game_gameno ASC
+                )
+     )
+     WHERE <![CDATA[ r >= #{startNum} AND r <= #{endNum} ]]>
+     <!-- 
+     1 page: WHERE r >= 1 AND r <= 10; 
+     2 page: WHERE r >= 11 AND r <= 20;
+     3 page: WHERE r >= 21 AND r <= 30;
+     -->                          
+   </select>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+</mapper>

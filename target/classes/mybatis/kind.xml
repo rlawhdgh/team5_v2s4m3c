@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<!-- dev.mvc.categrp.CategrpDAOInter 패키지에 등록된 interface 명시,
+      패키지명과 인터페이스명은 실제로 존재해야함,
+      Spring이 내부적으로 자동으로 interface를 구현해줌. -->
+<mapper namespace="dev.mvc.kind.KindDAOInter"> 
+  <!-- 
+  insert: INSERT SQL 실행
+  id: Spring에서 호출시 사용
+  parameterType: 전달받는 데이터 객체
+  return: 등록한 레코드 갯수 리턴
+  SQL선언시 ';'은 삭제
+  #{}: ? 동일
+  #{name}: public String getName(){...
+   -->
+  
+  <insert id="create" parameterType="KindVO">
+    INSERT INTO kind(kind_kindno,consumer_no, kind_kindname, kind_kindseqno, kind_kindrdate)
+    VALUES(kind_seq.nextval,#{consumer_no}, #{kind_kindname}, #{kind_kindseqno}, sysdate)
+  </insert>
+ 
+   <select id="list_asc" resultType="KindVO">
+    SELECT kind_kindno, kind_kindname, kind_kindseqno, kind_kindrdate
+    FROM kind
+    ORDER BY kind_kindseqno ASC
+  </select>
+  
+  <select id="read" resultType="KindVO" parameterType="int">
+    SELECT kind_kindno, kind_kindname, kind_kindseqno, kind_kindrdate
+    FROM kind
+    WHERE kind_kindno=#{kind_kindno}
+  </select>
+  
+  <update id="update" parameterType="KindVO">
+    UPDATE kind
+    SET kind_kindno=#{kind_kindno }, kind_kindseqno = #{kind_kindseqno  } 
+    WHERE kind_kindno = #{kind_kindno }
+  </update>
+  
+  <delete id="delete" parameterType="int">
+    DELETE FROM kind
+    WHERE kind_kindno = #{kind_kindno }
+  </delete>
+ 
+ <!-- 출력 순서 상향, 10 ▷ 1  -->  
+  <update id="update_up" parameterType="int">
+    UPDATE kind
+    SET kind_kindseqno = kind_kindseqno - 1
+    WHERE kind_kindno=#{kind_kindno }
+  </update>
+
+  <!-- 출력순서 하향, 1 ▷ 10  -->
+  <update id="update_down" parameterType="int">
+    UPDATE kind
+    SET kind_kindseqno = kind_kindseqno + 1
+    WHERE kind_kindno=#{kind_kindno }
+  </update>
+  
+  <update id="increaseCnt" parameterType="int">
+    UPDATE kind 
+    SET cnt = cnt + 1 
+    WHERE kind_kindno=#{kind_kindno}
+  </update>
+
+  <update id="decreaseCnt" parameterType="int">
+    UPDATE kind 
+    SET cnt = cnt - 1 
+    WHERE kind_kindno=#{kind_kindno}
+  </update>
+  
+  
+</mapper> 
